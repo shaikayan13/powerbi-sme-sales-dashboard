@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SME Sales Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#1F4E78;
+    --accent:#2E86AB;
+    --sky:#8ECAE6;
+    --amber:#F4A261;
+    --coral:#E76F51;
+    --bg:#F6F8FA;
+    --card:#FFFFFF;
+    --ink:#1B2430;
+    --muted:#5B6672;
+    --line:#E4E9EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  header{
+    background:linear-gradient(120deg,var(--navy),#123253);
+    color:#fff;
+    padding:28px 36px;
+  }
+  header h1{margin:0 0 4px;font-size:24px;font-weight:700;}
+  header p{margin:0;color:#cfe0f0;font-size:13px;}
+  .wrap{padding:24px 36px 40px;max-width:1400px;margin:0 auto;}
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .kpi{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .kpi .label{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .kpi .value{font-size:22px;font-weight:700;color:var(--navy);}
+  .grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+  }
+  .card h2{margin:0 0 14px;font-size:14px;font-weight:700;color:var(--ink);}
+  canvas{max-height:300px;}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    padding:20px;
+  }
+  @media(max-width:1000px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .grid,.grid3{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SME Sales Dashboard</h1>
+  <p>Sample dataset &middot; Jan 2024 &ndash; Dec 2025 &middot; Generated for Power BI / GitHub showcase</p>
+</header>
+
+<div class="wrap">
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Monthly Revenue Trend</h2>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Revenue by Channel</h2>
+      <canvas id="channelChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <h2>Revenue by Region</h2>
+      <canvas id="regionChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Revenue by Product</h2>
+      <canvas id="productChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Sales Rep Performance</h2>
+      <canvas id="repChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<footer>SME Sales Dashboard &middot; Built with Chart.js &middot; Data is synthetically generated sample data</footer>
+
+<script>
+const DATA = {"months": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"], "monthly_rev": [404740.0, 411260.0, 482686.0, 443810.0, 418410.0, 420294.0, 469276.0, 489440.0, 439366.0, 428683.0, 458174.0, 408204.0, 417668.0, 350242.0, 422916.0, 577710.0, 483158.0, 413312.0, 414856.0, 480860.0, 469366.0, 338688.0, 421819.0, 425824.0], "regions": ["Central", "East", "North", "South", "West"], "region_rev": [2137480.0, 2071929.0, 2253246.0, 1949658.0, 2078449.0], "products": ["Gadget X", "Gadget Y", "Service Pack", "Widget A", "Widget B", "Widget C"], "prod_rev": [1870290.0, 1985916.0, 3974700.0, 956512.0, 615519.0, 1087824.0], "channels": ["Direct Sales", "Distributor", "Online", "Retail"], "chan_rev": [2593329.0, 2763156.0, 2676392.0, 2457885.0], "reps": ["Aditi Rao", "Karan Verma", "Priya Singh", "Rohan Mehta", "Sara Khan", "Vikram Nair"], "rep_rev": [1618720.0, 1821328.0, 1694160.0, 1762637.0, 1689126.0, 1904789.0], "rep_profit": [571958.0, 642201.0, 590452.0, 614355.0, 607873.0, 676735.0], "total_rev": 10490761.5, "total_profit": 3703572.23, "orders": 2896}
+;
+
+const palette = ["#1F4E78","#2E86AB","#5DA9C7","#8ECAE6","#F4A261","#E76F51"];
+
+function fmtMoney(v){
+  if(v>=1000000) return "$"+(v/1000000).toFixed(2)+"M";
+  if(v>=1000) return "$"+(v/1000).toFixed(0)+"K";
+  return "$"+v.toFixed(0);
+}
+
+// KPIs
+const kpiWrap = document.getElementById("kpis");
+const margin = (DATA.total_profit/DATA.total_rev*100).toFixed(1);
+const avgOrder = (DATA.total_rev/DATA.orders).toFixed(0);
+const kpis = [
+  ["Total Revenue", fmtMoney(DATA.total_rev)],
+  ["Total Profit", fmtMoney(DATA.total_profit)],
+  ["Profit Margin", margin+"%"],
+  ["Total Orders", DATA.orders.toLocaleString()],
+  ["Avg Order Value", "$"+Number(avgOrder).toLocaleString()],
+];
+kpis.forEach(([label,value])=>{
+  const div = document.createElement("div");
+  div.className="kpi";
+  div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>`;
+  kpiWrap.appendChild(div);
+});
+
+Chart.defaults.font.family = "'Segoe UI',Arial,sans-serif";
+Chart.defaults.color = "#5B6672";
+
+new Chart(document.getElementById('trendChart'), {
+  type:'line',
+  data:{
+    labels: DATA.months,
+    datasets:[{
+      label:'Revenue',
+      data: DATA.monthly_rev,
+      borderColor:'#1F4E78',
+      backgroundColor:'rgba(31,78,120,0.08)',
+      fill:true,
+      tension:0.35,
+      pointRadius:3,
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{ticks:{callback:v=>fmtMoney(v)}},
+      x:{ticks:{maxRotation:45,minRotation:45}}
+    }
+  }
+});
+
+new Chart(document.getElementById('channelChart'), {
+  type:'doughnut',
+  data:{
+    labels: DATA.channels,
+    datasets:[{data: DATA.chan_rev, backgroundColor: palette}]
+  },
+  options:{plugins:{legend:{position:'bottom'}}}
+});
+
+new Chart(document.getElementById('regionChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.regions,
+    datasets:[{data: DATA.region_rev, backgroundColor:'#2E86AB'}]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{callback:v=>fmtMoney(v)}}}
+  }
+});
+
+new Chart(document.getElementById('productChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.products,
+    datasets:[{data: DATA.prod_rev, backgroundColor: palette}]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{y:{ticks:{callback:v=>fmtMoney(v)}}, x:{ticks:{maxRotation:30,minRotation:15}}}
+  }
+});
+
+new Chart(document.getElementById('repChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.reps,
+    datasets:[
+      {label:'Revenue', data: DATA.rep_rev, backgroundColor:'#1F4E78'},
+      {label:'Profit', data: DATA.rep_profit, backgroundColor:'#F4A261'}
+    ]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{position:'bottom'}},
+    scales:{x:{ticks:{callback:v=>fmtMoney(v)}}}
+  }
+});
+</script>
+
+</body>
+</html>
