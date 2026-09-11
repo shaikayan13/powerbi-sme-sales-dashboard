@@ -66,7 +66,7 @@ A full sales analytics package for a fictional SME, covering **Jan 2024 – Dec 
 No build step, no dependencies. Just open the file:
 
 ```bash
-git clone https://github.com/<your-username>/powerbi-sme-sales-dashboard.git
+git clone https://github.com/shaikayan13/powerbi-sme-sales-dashboard.git
 cd powerbi-sme-sales-dashboard
 open dashboard/index.html
 ```
